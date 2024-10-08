@@ -28,70 +28,86 @@ function parse_missing(val::String)
     end
 end
 
+function relabel!(col, old, new)
+    col[.!ismissing.(col) .& (col .== old)] .= new
+    return col
+end
+
 function clean_traits(df_raw)
     df = copy(df_raw)
 
     col = df[!, "flower architecture"]
-    col[ismissing.(col) .| (col .== "catkin")] .= missing
-    col[ismissing.(col) .| (col .== "pentamerous")] .= missing
+    relabel!(col, "catkin", missing)
+    relabel!(col, "pentamerous", missing)
 
     col = df[!, "fruit structure"]
-    col[ismissing.(col) .| (col .== "dry, fleshy")] .= missing
+    relabel!(col, "dry, fleshy", missing)
 
     col = df[!, "petal fusion"]
-    col[.!ismissing.(col) .& (col .== "free, fused")] .= "fused"
+    relabel!(col, "free, fused", missing)
+    relabel!(col, "free, fusion", missing)
+    relabel!(col, "fused, fusion", "fused")
 
     col = df[!, "spinescence"]
-    col[ismissing.(col) .| (col .== "armed, spinescent, spinulate, unarmed")] .= missing
+    relabel!(col, "armed, spinescent, spinulate, unarmed", "spinescent, spinulate")
+    relabel!(col, "armed, spinescent, spinulate", "spinescent, spinulate")
+    relabel!(col, "armed, spinescent", "spinescent")
+    relabel!(col, "armed, spinulate", "spinulate")
+    relabel!(col, "armed, unarmed", missing)
+    relabel!(col, "spinescent, unarmed", "spinescent")
+    relabel!(col, "spinulate, unarmed", "spinulate")
 
     col = df[!, "fruit dehiscence"]
-    col[.!ismissing.(col) .& (col .== "dehiscent, indehiscent, valvate")] .= "valvate"
+    relabel!(col, "dehiscent, indehiscent, valvate", "valvate")
+    relabel!(col, "dehiscent, suture", "suture")
     
     col = df[!, "habitat"]
-    col[.!ismissing.(col) .& (col .== "aquatic, aquatic/hygrophilous")] .= "hygrophilous"
-    col[.!ismissing.(col) .& (col .== "epiphyte, terrestrial")] .= "epiphyte"
+    relabel!(col, "aquatic, aquatic/hygrophilous", "hygrophilous")
+    relabel!(col, "epiphyte, terrestrial", "epiphyte")
   
     col = df[!, "succulence"]
-    col[.!ismissing.(col) .& (col .== "flexhy")] .= "fleshy"
+    relabel!(col, "flexhy", "fleshy")
  
     col = df[!, "flower sex"]
-    col[.!ismissing.(col) .& (col .== "bisexual, pistillate, staminate")] .= "unisexual"
-    col[.!ismissing.(col) .& (col .== "bisexual, pistillate, unisexual")] .= "bissexual, pistillate"
-    col[.!ismissing.(col) .& (col .== "pistillate, staminate, unisexual")] .= "unisexual"
-    col[.!ismissing.(col) .& (col .== "staminate, unisexual")] .= "staminate"
-    col[.!ismissing.(col) .& (col .== "pistillate, unisexual")] .= "unisexual"
+    relabel!(col, "bisexual, pistillate, staminate", "unisexual")
+    relabel!(col, "bisexual, pistillate, unisexual", "bissexual, pistillate")
+    relabel!(col, "pistillate, staminate, unisexual", "unisexual")
+    relabel!(col, "staminate, unisexual", "staminate")
+    relabel!(col, "pistillate, unisexual", "unisexual")
  
     col = df[!, "leaf arrangement"]
-    col[.!ismissing.(col) .& (col .== "bipinnate, lobed, pinnate")] .= "bipinnate"
-    col[.!ismissing.(col) .& (col .== "bipinnate, pinnate")] .= "bipinnate"
-    col[.!ismissing.(col) .& (col .== "digitate, pinnate")] .= "digitate"
-    col[.!ismissing.(col) .& (col .== "lobed, pinnate")] .= "pinnate"
-    col[.!ismissing.(col) .& (col .== "lobed")] .= "simple"
-    col[.!ismissing.(col) .& (col .== "lobed, simple")] .= "simple"
-    col[ismissing.(col) .| (col .== "lobed, pinnate, simple")] .= missing
-    col[ismissing.(col) .| (col .== "simple, trifoliolate")] .= missing
+    relabel!(col, "bipinnate, lobed, pinnate", "bipinnate")
+    relabel!(col, "bipinnate, pinnate", "bipinnate")
+    relabel!(col, "digitate, pinnate", "digitate")
+    relabel!(col, "lobed, pinnate", "pinnate")
+    relabel!(col, "lobed", "simple")
+    relabel!(col, "lobed, simple", "simple")
+    relabel!(col, "lobed, pinnate, simple", missing)
+    relabel!(col, "simple, trifoliolate", missing)
 
     col = df[!, "leaf position"]
-    col[ismissing.(col) .| (col .== "alternate, opposite")] .= missing
-    col[ismissing.(col) .| (col .== "alternate, fascicled, opposite")] .= missing
-    col[.!ismissing.(col) .& (col .== "decussate, opposite")] .= "decussate"
-    col[.!ismissing.(col) .& (col .== "alternate, spirally")] .= "spirally"
-    col[.!ismissing.(col) .& (col .== "fascicled")] .= "fasciculate"
-    col[.!ismissing.(col) .& (col .== "verticillate, whorled")] .= "whorled"
-    col[ismissing.(col) .| (col .== "alternate, fasciculate")] .= missing
+    relabel!(col, "alternate, opposite", missing)
+    relabel!(col, "alternate, fascicled, opposite", missing)
+    relabel!(col, "decussate, opposite", "decussate")
+    relabel!(col, "alternate, spirally", "spirally")
+    relabel!(col, "fascicled", "fasciculate")
+    relabel!(col, "verticillate, whorled", "whorled")
+    relabel!(col, "alternate, fasciculate", missing)
 
     col = df[!, "fruit shape"]
-    col[.!ismissing.(col) .& (col .== "cylindrical, fusiform")] .= "fusiform"
-    col[.!ismissing.(col) .& (col .== "cylindrical, ovoid")] .= "ovoid"
-    col[.!ismissing.(col) .& (col .== "turbinate")] .= "ovoid"
+    relabel!(col, "cylindrical, fusiform", "fusiform")
+    relabel!(col, "cylindrical, ovoid", "ovoid")
+    relabel!(col, "turbinate", "ovoid")
 
     col = df[!, "inflorescence arrangement"]
-    col[.!ismissing.(col) .& (col .== "clustered, corymb, raceme")] .= "clustered, corymb"
-    col[.!ismissing.(col) .& (col .== "clustered, panicle, raceme")] .= "clustered, panicle"
-    col[.!ismissing.(col) .& (col .== "raceme, thyrse")] .= "thyrse"
-    col[.!ismissing.(col) .& (col .== "raceme, umbel")] .= "umbel"
-    col[.!ismissing.(col) .& (col .== "panicle, thyrse")] .= "thyrse"
-    col[.!ismissing.(col) .& (col .== "corymb, panicle, raceme")] .= "corymb, panicle"
+    relabel!(col, "clustered, corymb, raceme", "clustered, corymb")
+    relabel!(col, "clustered, panicle, raceme", "clustered, panicle")
+    relabel!(col, "clustered, panicle, raceme, thyrse", "clustered, thyrse")
+    relabel!(col, "raceme, thyrse", "thyrse")
+    relabel!(col, "raceme, umbel", "umbel")
+    relabel!(col, "panicle, thyrse", "thyrse")
+    relabel!(col, "corymb, panicle, raceme", "corymb, panicle")
+    relabel!(col, "panicle, raceme, umbel", "panicle, umbel")
 
     col = df[!, "habit"]
     for i in 1:nrow(df)
@@ -104,16 +120,23 @@ function clean_traits(df_raw)
             col[i] = "climber"
         end
     end
-    col[.!ismissing.(col) .& (col .== "erect leafy, herb")] .= "erect leafy"
-    col[.!ismissing.(col) .& (col .== "erect leafy, herb, shrub")] .= "erect leafy"
-    col[.!ismissing.(col) .& (col .== "herb, prostrate")] .= "prostrate"
-    col[.!ismissing.(col) .& (col .== "herb, prostrate, shrub")] .= "prostrate"
-    col[.!ismissing.(col) .& (col .== "herb, tree, tree/shrub")] .= "herb"
-    col[.!ismissing.(col) .& (col .== "tree, tussock")] .= "tree"
-    col[.!ismissing.(col) .& (col .== "shrub, tussock")] .= "shrub"
-    col[.!ismissing.(col) .& (col .== "prostrate, shrub, tree/shrub")] .= "prostrate"
-    col[.!ismissing.(col) .& (col .== "prostrate, tussock")] .= "prostrate"
-    col[.!ismissing.(col) .& (col .== "herb, tussock")] .= "erect leafy"
+    relabel!(col, "erect leafy, herb", "erect leafy")
+    relabel!(col, "erect leafy, herb, shrub", "erect leafy")
+    relabel!(col, "herb, prostrate", "prostrate")
+    relabel!(col, "herb, prostrate, shrub", "prostrate")
+    relabel!(col, "herb, tree, tree/shrub", "herb")
+    relabel!(col, "tree, tussock", "tree")
+    relabel!(col, "shrub, tussock", "shrub")
+    relabel!(col, "prostrate, shrub, tree/shrub", "prostrate")
+    relabel!(col, "prostrate, tussock", "prostrate")
+    relabel!(col, "herb, tussock", "erect leafy")
+
+    for col in names(df)
+        if all(ismissing.(df[!, col]))
+            select!(df, Not(col))
+            @info "Dropping column $col"
+        end
+    end
 
     return df
 end
@@ -133,40 +156,36 @@ function read_trait_data(filename::String)
         df_raw[!, 1] = string.(df_raw[!, 1])
     end
 
-    df = clean_traits(df_raw)
-
     for col in header
-        if all(ismissing.(df[!, col]))
-            select!(df, Not(col))
-            @info "Dropping column $col"
+        if all(ismissing.(df_raw[!, col]))
             continue
         end
-        if any(occursin.(r" [cm]?m$", skipmissing(df[!, col])))
-            df[!, col] = uparse_missing.(df[!, col])
-        elseif !any(occursin.(r"[^0-9-. ]", skipmissing(df[!, col])))
-            df[!, col] = parse_missing.(df[!, col])
+        if any(occursin.(r" [cm]?m$", skipmissing(df_raw[!, col])))
+            df_raw[!, col] = uparse_missing.(df_raw[!, col])
+        elseif !any(occursin.(r"[^0-9-. ]", skipmissing(df_raw[!, col])))
+            df_raw[!, col] = parse_missing.(df_raw[!, col])
         else
-            for i in 1:nrow(df)
-                val = df[i, col]
+            for i in 1:nrow(df_raw)
+                val = df_raw[i, col]
                 if ismissing(val)
                     continue
                 end
                 if occursin(r"2n", col)
                     val = replace(val, r"[,.] ?$" => "", r" ?2n ?= ?" => "", r" ?\| ?" => ", ", r" ?, ?" => ", ")
                     if occursin(r"[^0-9, ]", val) || !occursin(r"[^ ]", val)
-                        @warn "Could not parse $(df[i, col])"
-                        df[i, col] = missing
+                        @warn "Could not parse $(df_raw[i, col])"
+                        df_raw[i, col] = missing
                     else
-                        df[i, col] = join(string.(unique(sort(parse.(Int, split(val, ", "))))), ", ")
+                        df_raw[i, col] = join(string.(unique(sort(parse.(Int, split(val, ", "))))), ", ")
                     end
                 elseif occursin(r" ?, ?", val)
-                    df[i, col] = join(sort(split(val, r" ?, ?")), ", ")
+                    df_raw[i, col] = join(sort(split(val, r" ?, ?")), ", ")
                 end
             end
         end
     end
-    
-    return df
+
+    return clean_traits(df_raw)
 end
 
 function read_plant_tree(path, synonyms, df)
@@ -252,9 +271,8 @@ function read_plant_tree(path, synonyms, df)
     @info "$(length(taxa)) taxa"
 
     setdiff!(taxa, Set(getnodenames(tree)))
-    @info "$(length(taxa)) taxa not used"
+    @info "$(length(taxa)) taxa not in parent tree"
 
-    @info "$(nnodes(tree)) nodes"
     for node in traversal(tree, postorder)
         nd = getnodedata(tree, node)
         if isleaf(tree, node)
@@ -303,19 +321,35 @@ function read_plant_tree(path, synonyms, df)
         end
     end
 
-    @info "Then $(length(taxa))"
+    @info "Finally $(length(taxa)) taxa missing"
 
-    @info "$(length(taxa ∩ Set(df.genus))) of $(length(Set(df.genus))) genera"
-    @info "$(length(taxa ∩ Set(df.family))) of $(length(Set(df.family))) families"
-    @info "$(length(taxa ∩ Set(df.order))) of $(length(Set(df.order))) order"
-    @info "$(length(taxa ∩ Set(df.phylum))) of $(length(Set(df.phylum))) phylum"
-    @info "$(length(taxa ∩ Set(df.kingdom)))  of $(length(Set(df.kingdom))) kingdom"
+    n = length(taxa ∩ Set(df.genus))
+    if n > 0
+        @info "Missing $n of $(length(Set(df.genus))) genera"
+    end
+    n = length(taxa ∩ Set(df.family))
+    if n > 0
+        @info "Missing $n of $(length(Set(df.family))) families"
+    end
+    n = length(taxa ∩ Set(df.order))
+    if n > 0
+        @info "Missing $n of $(length(Set(df.order))) order"
+    end
+    n = length(taxa ∩ Set(df.phylum))
+    if n > 0
+        @info "Missing $n of $(length(Set(df.phylum))) phylum"
+    end
+    n = length(taxa ∩ Set(df.kingdom))
+    if n > 0
+        @info "Missing $n of $(length(Set(df.kingdom))) kingdom"
+    end
 
     return tree
 end
 
 function expand_tree!(tree, df; ranks = ["genus", "family", "order", "phylum", "kingdom"])
     leaves = Set(getleafnames(tree))
+    num = length(leaves)
     height = getheight(tree, first(leaves))
     for row in eachrow(df)
         if row.rank == "species" && row.binomial ∉ leaves
@@ -333,6 +367,7 @@ function expand_tree!(tree, df; ranks = ["genus", "family", "order", "phylum", "
             end
         end
     end
+    @info "Added $(length(leaves) - num) new species, now $(length(leaves)) leaves"
 
     return tree
 end

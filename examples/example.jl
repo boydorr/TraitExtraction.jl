@@ -14,9 +14,9 @@ cols = Set(names(df_dicot) ∪ names(df_monocot) ∪ names(df_0))
 col_types = Set{Pair{String, Type}}()
 for col in cols
     union_type = Union{}
-    for df in [df_dicot, df_monocot, df_0]
-        if col ∈ names(df)
-            union_type = Union{union_type, eltype(df[!, col])}
+    for dfi in [df_dicot, df_monocot, df_0]
+        if col ∈ names(dfi)
+            union_type = Union{union_type, eltype(dfi[!, col])}
         end
     end
     push!(col_types, col => union_type)
@@ -37,13 +37,6 @@ end
 df_full = vcat(df_dicot, df_monocot, df_0);
 sort!(df_full, "taxon")
 unique!(df_full)
-
-df = copy(df_full)
-for col in names(df)
-    if eltype(df[!, col]) ∉ [Union{String, Missing}, String]
-        df[!, col] = [ismissing(x) ? missing : (x isa Int ? x : string(x)) for x in df[!, col]]
-    end
-end
 
 species_genus = Dict{String, String}()
 genus_family = Dict{String, String}()
@@ -134,64 +127,24 @@ for plant in plantlist
     end
 end
 
+df = copy(df_full)
+for col in names(df)
+    if eltype(df[!, col]) ∉ [Union{String, Missing}, String]
+        df[!, col] = [ismissing(x) ? missing : (x isa Int ? x : string(x)) for x in df[!, col]]
+    end
+end
+
 for i in 1:nrow(df)
     if df[i, "taxon"] ∈ keys(synonym_to_species)
         df[i, "taxon"] = synonym_to_species[df[i, "taxon"]]
     end
 end
 
-tree = read_plant_tree("examples/Qian2016.tree", synonym_to_species, df_wfo);
-expand_tree!(tree, df_wfo, ranks = ["genus"]);
-@info "$(nleaves(tree)) leaves in tree"
-expand_tree!(tree, df_wfo, ranks = ["genus", "family"]);
-@info "$(nleaves(tree)) leaves in tree"
-expand_tree!(tree, df_wfo);
-@info "$(nleaves(tree)) leaves in tree"
-
-for sp in df[!, "taxon"]
-    if !haskey(species_genus, sp)
-        println(sp ∈ [x["full_name_string_alpha_s"] for x in plantlist] ?
-                "$sp, in WFO ($([x["role_s"] for x in plantlist if sp == x["full_name_string_alpha_s"]][1]))" : "$sp, not in WFO")
-        if sp ∈ getleafnames(tree)
-            @warn "Species $sp in tree"
-        else
-            delete!(df, findall(df[!, "taxon"] .== sp))
-        end
-    end
-end
-
-dropped_species = setdiff(getleafnames(tree), df[!, "taxon"])
-droptips!(tree, dropped_species)
-df_tree = copy(df)
-delete!(df_tree, df_tree[!, "taxon"] .∉ Ref(getleafnames(tree)))
-
-species_wfo = df_wfo |> filter(row -> row.rank == "species")
-select!(species_wfo, Not("rank"))
-
-# Find duplicated binomials
-spp = species_wfo.binomial
+sort!(df, "taxon")
+spp = df.taxon
 duplicates = spp[1:end-1] .== spp[2:end]
 push!(duplicates, false)
-delete!(species_wfo, duplicates)
-select!(species_wfo, Not("name", "species"))
-CSV.write("examples/wfo_species.csv", species_wfo)
-sp0 = CSV.read("../../plant-traits/input/wfo-species/wfo-0.csv", DataFrame)
-
-data = XLSX.readxlsx("examples/Full PUP II sample.xlsx")
-bryo_sheet = data["Bryophyte species"]
-pter_sheet = data["Pteridophyte species"]
-monocot_sheet = data["Monocot species"]
-dicot_sheet = data["Dicot species"]
-
-bryo_sp = vec(string.(bryo_sheet[2:end, 2]))
-pter_sp = vec(string.(pter_sheet[2:end, 2]))
-monocot_sp = vec(string.(monocot_sheet[2:end, 2]))
-dicot_sp = vec(string.(dicot_sheet[2:end, 2]))
-
-bryo_new = Dict(sp => synonym_to_species[sp] for sp in bryo_sp if sp in keys(synonym_to_species))
-pter_new = Dict(sp => synonym_to_species[sp] for sp in pter_sp if sp in keys(synonym_to_species))
-monocot_new = Dict(sp => synonym_to_species[sp] for sp in monocot_sp if sp in keys(synonym_to_species))
-dicot_new = Dict(sp => synonym_to_species[sp] for sp in dicot_sp if sp in keys(synonym_to_species))
+delete!(df, duplicates)
 
 # create a Dict of the unique non-missing values in each column with the column name as the key
 trait_data = Dict{String, Union{Set{String}, Set{Int}}}()
@@ -255,3 +208,72 @@ XLSX.writetable("examples/traits.xlsx",
                  ("Colour", col_colour, ks_colour),
                  ("Single", col_single, ks_single)],
                  overwrite = true)
+
+full_tree = read_plant_tree("examples/Qian2016.tree", synonym_to_species, df_wfo);
+expand_tree!(full_tree, df_wfo);
+
+tree = read_plant_tree("examples/Qian2016.tree", synonym_to_species, df_wfo);
+expand_tree!(tree, df_wfo, ranks = ["genus", "family"]);
+
+real_tree = read_plant_tree("examples/Qian2016.tree", synonym_to_species, df_wfo);
+
+df_tree = copy(df)
+for sp in df_tree.taxon
+    if !haskey(species_genus, sp)
+        println(sp ∈ [x["full_name_string_alpha_s"] for x in plantlist] ?
+                "$sp, in WFO ($([x["role_s"] for x in plantlist if sp == x["full_name_string_alpha_s"]][1]))" : "$sp, not in WFO")
+        if sp ∈ getleafnames(tree)
+            @warn "Species $sp in tree"
+        else
+            @info "Species $sp not in tree"
+            delete!(df_tree, findall(df_tree.taxon .== sp))
+        end
+    end
+end
+
+dropped_species = setdiff(getleafnames(real_tree), df_tree.taxon)
+droptips!(real_tree, dropped_species)
+delete!(df_tree, df_tree.taxon .∉ Ref(getleafnames(real_tree)))
+sort!(df_tree, "taxon")
+spp = df_tree.taxon
+duplicates = spp[1:end-1] .== spp[2:end]
+push!(duplicates, false)
+delete!(df_tree, duplicates)
+
+using RCall
+@rput real_tree
+val = df_tree[:, "life form"]
+@rput val
+R"""
+library(ape)
+output <- ace(val, real_tree, "discrete", model = "SYM")
+"""
+
+
+species_wfo = df_wfo |> filter(row -> row.rank == "species")
+select!(species_wfo, Not("rank"))
+
+# Find duplicated binomials
+spp = species_wfo.binomial
+duplicates = spp[1:end-1] .== spp[2:end]
+push!(duplicates, false)
+delete!(species_wfo, duplicates)
+select!(species_wfo, Not("name", "species"))
+CSV.write("examples/wfo_species.csv", species_wfo)
+# sp0 = CSV.read("../../plant-traits/input/wfo-species/wfo-0.csv", DataFrame)
+
+data = XLSX.readxlsx("examples/Full PUP II sample.xlsx")
+bryo_sheet = data["Bryophyte species"]
+pter_sheet = data["Pteridophyte species"]
+monocot_sheet = data["Monocot species"]
+dicot_sheet = data["Dicot species"]
+
+bryo_sp = vec(string.(bryo_sheet[2:end, 2]))
+pter_sp = vec(string.(pter_sheet[2:end, 2]))
+monocot_sp = vec(string.(monocot_sheet[2:end, 2]))
+dicot_sp = vec(string.(dicot_sheet[2:end, 2]))
+
+bryo_new = Dict(sp => synonym_to_species[sp] for sp in bryo_sp if sp in keys(synonym_to_species))
+pter_new = Dict(sp => synonym_to_species[sp] for sp in pter_sp if sp in keys(synonym_to_species))
+monocot_new = Dict(sp => synonym_to_species[sp] for sp in monocot_sp if sp in keys(synonym_to_species))
+dicot_new = Dict(sp => synonym_to_species[sp] for sp in dicot_sp if sp in keys(synonym_to_species))
