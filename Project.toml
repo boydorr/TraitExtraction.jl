@@ -1,5 +1,6 @@
 name = "TraitExtraction"
 uuid = "38bdcf27-bee4-41ec-96d7-b019897ce2a4"
+license = "BSD-2-Clause"
 authors = ["Richard Reeve <richard.reeve@glasgow.ac.uk>"]
 version = "0.1.0"
 
@@ -15,6 +16,14 @@ XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
 julia = "1.6.7"
+
+[[author_details]]
+name = "Richard Reeve"
+orcid = "0000-0003-2589-8091"
+email = "richard.reeve@glasgow.ac.uk"
+
+    [[author_details.affiliation]]
+    ror = "00vtgdb53"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
