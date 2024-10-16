@@ -4,10 +4,10 @@
     "applicationCategory": "ecology",
     "programmingLanguage": "julia",
     "developmentStatus": "active",
-    "codeRepository": "https://github.com/richardreeve/TraitExtraction.jl",
+    "codeRepository": "https://github.com/boydorr/TraitExtraction.jl",
     "name": "TraitExtraction.jl",
-    "issueTracker": "https://github.com/richardreeve/TraitExtraction.jl/issues",
-    "readme": "https://github.com/richardreeve/TraitExtraction.jl/blob/main/README.md",
+    "issueTracker": "https://github.com/boydorr/TraitExtraction.jl/issues",
+    "readme": "https://github.com/boydorr/TraitExtraction.jl/blob/main/README.md",
     "dateCreated": "2024-09-29",
     "operatingSystem": [
         "Linux"
@@ -15,7 +15,7 @@
     "version": "v0.1.0",
     "dateModified": "2024-10-16",
     "datePublished": "2024-10-16",
-    "downloadUrl": "https://github.com/richardreeve/TraitExtraction.jl/archive/refs/tags/v0.1.0.tar.gz",
+    "downloadUrl": "https://github.com/boydorr/TraitExtraction.jl/archive/refs/tags/v0.1.0.tar.gz",
     "license": "https://spdx.org/licenses/BSD-2-Clause",
     "author": [
         {

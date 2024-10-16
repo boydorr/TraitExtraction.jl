@@ -14,7 +14,7 @@
     "related_identifiers": [
         {
             "scheme": "url",
-            "identifier": "https://github.com/richardreeve/TraitExtraction.jl",
+            "identifier": "https://github.com/boydorr/TraitExtraction.jl",
             "relation": "isOriginalFormOf"
         }
     ],
