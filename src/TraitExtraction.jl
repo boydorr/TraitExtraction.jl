@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-2-Clause
+
 module TraitExtraction
 
 using XLSX, CSV
@@ -37,7 +39,8 @@ function parse_missing_2n(::Missing)
 end
 
 function parse_missing_2n(val::AbstractString)
-    v2 = replace(val, r"[,.] ?$" => "", r" ?2n ?= ?" => "", r" ?\| ?" => ", ", r" ?, ?" => ", ")
+    v2 = replace(val, r"[,.] ?$" => "", r" ?2n ?= ?" => "", r" ?\| ?" => ", ",
+                 r" ?, ?" => ", ")
     if !occursin(r"[^ ]", v2)
         return missing
     elseif occursin(r"[^0-9, ]", v2)
@@ -73,7 +76,7 @@ function parse_missing(T::Type{<:Number}, val::AbstractString)
     return parse(T, val)
 end
 
-function removelabel!(col::Vector{Missing},_ , _)
+function removelabel!(col::Vector{Missing}, _, _)
     return col
 end
 
@@ -102,10 +105,10 @@ function removelabel!(col, old)
                 col[i] = missing
             end
         end
-    else 
+    else
         col[.!ismissing.(col) .& (col .== old)] .= missing
     end
-    
+
     return col
 end
 
@@ -164,7 +167,8 @@ function clean_traits(df_raw)
     col = df[!, "spinescence"]
     removelabel!(col, ["armed", "spinescent", "unarmed"])
     removelabel!(col, ["armed", "spinescent", "spinulate", "unarmed"])
-    relabel!(col, ["armed", "spinescent", "spinulate"], ["spinescent", "spinulate"])
+    relabel!(col, ["armed", "spinescent", "spinulate"],
+             ["spinescent", "spinulate"])
     relabel!(col, ["armed", "spinescent"], ["spinescent"])
     relabel!(col, ["armed", "spinulate"], ["spinulate"])
     removelabel!(col, ["armed", "unarmed"])
@@ -174,7 +178,7 @@ function clean_traits(df_raw)
     col = df[!, "fruit dehiscence"]
     relabel!(col, ["dehiscent", "indehiscent", "valvate"], ["valvate"])
     relabel!(col, ["dehiscent", "suture"], ["suture"])
-    
+
     col = df[!, "habitat"]
     relabel!(col, ["aquatic", "aquatic/hygrophilous"], ["hygrophilous"])
     relabel!(col, ["epiphyte", "terrestrial"], ["epiphyte"])
@@ -186,7 +190,8 @@ function clean_traits(df_raw)
 
     col = df[!, "flower sex"]
     relabel!(col, ["bisexual", "pistillate", "staminate"], ["unisexual"])
-    relabel!(col, ["bisexual", "pistillate", "unisexual"], ["bissexual", "pistillate"])
+    relabel!(col, ["bisexual", "pistillate", "unisexual"],
+             ["bissexual", "pistillate"])
     relabel!(col, ["pistillate", "staminate", "unisexual"], ["unisexual"])
     relabel!(col, ["staminate", "unisexual"], ["staminate"])
     relabel!(col, ["pistillate", "unisexual"], ["unisexual"])
@@ -218,7 +223,8 @@ function clean_traits(df_raw)
     col = df[!, "inflorescence arrangement"]
     relabel!(col, ["clustered", "corymb", "raceme"], ["clustered", "corymb"])
     relabel!(col, ["clustered", "panicle", "raceme"], ["clustered", "panicle"])
-    relabel!(col, ["clustered", "panicle", "raceme", "thyrse"], ["clustered", "thyrse"])
+    relabel!(col, ["clustered", "panicle", "raceme", "thyrse"],
+             ["clustered", "thyrse"])
     relabel!(col, ["raceme", "thyrse"], ["thyrse"])
     relabel!(col, ["raceme", "umbel"], ["umbel"])
     relabel!(col, ["panicle", "thyrse"], ["thyrse"])
@@ -267,7 +273,7 @@ function read_trait_data(filename::AbstractString)
         rows = convert.(Union{String, Missing}, rows)
         df_raw = DataFrame(rows, header)
     else
-        df_raw = CSV.read(filename, DataFrame, stringtype=String)
+        df_raw = CSV.read(filename, DataFrame, stringtype = String)
         header = names(df_raw)
     end
 
@@ -279,7 +285,7 @@ function read_trait_data(filename::AbstractString)
 
     for col in header
         ET = eltype(df_raw[!, col])
-        if ET <: Union{Missing, <: Number}
+        if ET <: Union{Missing, <:Number}
             continue
         end
         if nonmissingtype(ET) <: AbstractString
@@ -328,7 +334,7 @@ function read_plant_tree(path, synonyms, df)
         id[name] = i
     end
 
-    tree = open(parsenewick, path);
+    tree = open(parsenewick, path)
 
     tips = getleafnames(tree)
     species_tips = replace.(tips, "_" => " ")
@@ -367,7 +373,8 @@ function read_plant_tree(path, synonyms, df)
                 continue
             elseif (nn[1] * " " * nn[2] * "-" * nn[3]) ∈ keys(synonyms)
                 renamed += 1
-                renamenode!(tree, species, synonyms[nn[1] * " " * nn[2] * "-" * nn[3]])
+                renamenode!(tree, species,
+                            synonyms[nn[1] * " " * nn[2] * "-" * nn[3]])
                 continue
             end
         end
@@ -490,12 +497,15 @@ function expand_df_to_tree!(df, tree)
     end
 end
 
-function expand_tree!(tree, df; ranks = ["genus", "family", "order", "phylum", "kingdom"], species = missing)
+function expand_tree!(tree, df;
+                      ranks = ["genus", "family", "order", "phylum", "kingdom"],
+                      species = missing)
     leaves = Set(getleafnames(tree))
     num = length(leaves)
     height = getheight(tree, first(leaves))
     for row in eachrow(df)
-        if row.rank == "species" && row.binomial ∉ leaves && (ismissing(species) || row.binomial ∈ species)
+        if row.rank == "species" && row.binomial ∉ leaves &&
+           (ismissing(species) || row.binomial ∈ species)
             for rank in ranks
                 if hasnode(tree, row[rank])
                     parent = getnode(tree, row[rank])
@@ -503,7 +513,8 @@ function expand_tree!(tree, df; ranks = ["genus", "family", "order", "phylum", "
                     for r in ["genus", "family", "order", "phylum", "kingdom"]
                         setnodedata!(tree, child, r, row[r])
                     end
-                    createbranch!(tree, parent, child, height - getheight(tree, parent))
+                    createbranch!(tree, parent, child,
+                                  height - getheight(tree, parent))
                     push!(leaves, row.binomial)
                     break
                 end
@@ -517,9 +528,10 @@ end
 
 function synonymise(sheet, desynonym, sp_to_fam)
     cols = vec(string.(sheet[1, :]))
-    species = [replace(sp, r"^ *([^ ].*[^ *])[ *]*$" => s"\1") for sp ∈ vec(string.(sheet[2:end, 2]))]
-    species = [get(desynonym, sp, sp) for sp ∈ species]
-    families = [get(sp_to_fam, sp, missing) for sp ∈ species]
+    species = [replace(sp, r"^ *([^ ].*[^ *])[ *]*$" => s"\1")
+               for sp in vec(string.(sheet[2:end, 2]))]
+    species = [get(desynonym, sp, sp) for sp in species]
+    families = [get(sp_to_fam, sp, missing) for sp in species]
     if any(ismissing.(families))
         @warn "Missing $(length(species[ismissing.(families)])) records"
     end
@@ -542,6 +554,7 @@ function resynonym(species, synonyms)
     return (vv = [syn, spp], cols = cols)
 end
 
-export read_trait_data, read_plant_tree, expand_tree!, expand_df_to_tree!, synonymise, resynonym
+export read_trait_data, read_plant_tree, expand_tree!, expand_df_to_tree!,
+       synonymise, resynonym
 
 end

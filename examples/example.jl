@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-2-Clause
+
 using XLSX, DataFrames, CSV, JSON
 using TraitExtraction
 using Phylo
@@ -24,15 +26,19 @@ name_id = Dict{String, Int}()
 dropped = String[]
 
 df_wfo = DataFrame(rank = String[], binomial = String[], name = String[],
-                   species = Union{Nothing, String}[], genus = Union{Nothing, String}[],
-                   family = Union{Nothing, String}[], order = Union{Nothing, String}[],
-                   phylum = Union{Nothing, String}[], kingdom = Union{Nothing, String}[],
+                   species = Union{Nothing, String}[],
+                   genus = Union{Nothing, String}[],
+                   family = Union{Nothing, String}[],
+                   order = Union{Nothing, String}[],
+                   phylum = Union{Nothing, String}[],
+                   kingdom = Union{Nothing, String}[],
                    wfo = Union{Nothing, String}[])
-                   
+
 for plant in plantlist
     if haskey(plant, "role_s")
         if plant["role_s"] == "accepted"
-            row = (rank = plant["rank_s"], binomial = plant["full_name_string_alpha_s"],
+            row = (rank = plant["rank_s"],
+                   binomial = plant["full_name_string_alpha_s"],
                    name = plant["full_name_string_plain_s"],
                    species = get(plant, "placed_in_species_s", nothing),
                    genus = get(plant, "placed_in_genus_s", nothing),
@@ -41,7 +47,8 @@ for plant in plantlist
                    phylum = get(plant, "placed_in_phylum_s", nothing),
                    kingdom = get(plant, "placed_in_kingdom_s", nothing),
                    wfo = haskey(plant, "wfo_id_s") ?
-                        "https://www.worldfloraonline.org/taxon/" * plant["wfo_id_s"] : nothing)
+                         "https://www.worldfloraonline.org/taxon/" *
+                         plant["wfo_id_s"] : nothing)
             if row.rank != "code" && !haskey(binomial_id, row.binomial)
                 push!(df_wfo, row)
                 binomial_id[row.binomial] = nrow(df_wfo)
@@ -96,7 +103,8 @@ for plant in plantlist
                             synonym_to_species[name] = row.binomial
                             push!(species_to_synonyms[row.binomial], name)
                         end
-                    elseif row.rank == "subspecies" || row.rank == "variety" || row.rank == "form" || row.rank == "subvariety"
+                    elseif row.rank == "subspecies" || row.rank == "variety" ||
+                           row.rank == "form" || row.rank == "subvariety"
                         label = row.genus * " " * row.species
                         if name != label && !haskey(binomial_id, name)
                             synonym_to_species[name] = label
@@ -113,10 +121,11 @@ for plant in plantlist
     end
 end
 
-df_full.species = get.(Ref(synonym_to_species), df_full.species, df_full.species)
+df_full.species = get.(Ref(synonym_to_species), df_full.species,
+                       df_full.species)
 sort!(df_full, "species")
 spp = df_full.species;
-duplicates = spp[1:end-1] .== spp[2:end];
+duplicates = spp[1:(end - 1)] .== spp[2:end];
 push!(duplicates, false);
 delete!(df_full, duplicates)
 @info "Dropped $(sum(duplicates)) duplicates"
@@ -126,9 +135,11 @@ df = copy(df_full)
 for col in names(df)
     if !(nonmissingtype(eltype(df[!, col])) <: AbstractString)
         if nonmissingtype(eltype(df[!, col])) <: Vector{<:AbstractString}
-            df[!, col] = [ismissing(val) ? missing : join(val, ",") for val in df[!, col]]
+            df[!, col] = [ismissing(val) ? missing : join(val, ",")
+                          for val in df[!, col]]
         else
-            df[!, col] = [ismissing(val) ? missing : string(val) for val in df[!, col]]
+            df[!, col] = [ismissing(val) ? missing : string(val)
+                          for val in df[!, col]]
         end
     end
 end
@@ -139,8 +150,8 @@ trait_data = Dict{String, Union{Set{String}, Set{Int}}}()
 for col in names(df)
     if col ∉ ["wfo", "species"]
         if !(nonmissingtype(eltype(df_full[!, col])) <: Number ||
-            (nonmissingtype(eltype(df_full[!, col])) <: AbstractVector &&
-             eltype(nonmissingtype(eltype(df_full[!, col]))) <: Number))
+             (nonmissingtype(eltype(df_full[!, col])) <: AbstractVector &&
+              eltype(nonmissingtype(eltype(df_full[!, col]))) <: Number))
             @info col
             cnt = Dict(counter(df[!, col]))
             for (k, v) in cnt
@@ -174,7 +185,7 @@ sort!(df, "species")
 real_tree = read_plant_tree("data/Qian2016.tree", synonym_to_species, df_wfo);
 expand_df_to_tree!(df, real_tree);
 open("examples/real_tree.tree", "w") do io
-    write(io, real_tree)
+    return write(io, real_tree)
 end
 
 max_len = maximum(length.(values(trait_data)))
@@ -191,7 +202,8 @@ df_tree = copy(df)
 for sp in df_tree.species
     if !haskey(species_genus, sp)
         println(sp ∈ [x["full_name_string_alpha_s"] for x in plantlist] ?
-                "$sp, in WFO ($([x["role_s"] for x in plantlist if sp == x["full_name_string_alpha_s"]][1]))" : "$sp, not in WFO")
+                "$sp, in WFO ($([x["role_s"] for x in plantlist if sp == x["full_name_string_alpha_s"]][1]))" :
+                "$sp, not in WFO")
         if sp ∈ getleafnames(real_tree)
             @warn "Species $sp in tree"
         else
@@ -201,12 +213,13 @@ for sp in df_tree.species
     end
 end
 
-expand_tree!(real_tree, df_wfo, ranks = ["genus", "family"], species = Set(df_tree.species))
+expand_tree!(real_tree, df_wfo, ranks = ["genus", "family"],
+             species = Set(df_tree.species))
 # expand_tree!(real_tree, df_wfo, ranks = ["genus", "family"], species = df_tree.species)
 expand_df_to_tree!(df_tree, real_tree);
 sort!(df_tree, "species")
 spp = df_tree.species
-duplicates = spp[1:end-1] .== spp[2:end]
+duplicates = spp[1:(end - 1)] .== spp[2:end]
 push!(duplicates, false)
 delete!(df_tree, duplicates)
 
@@ -226,7 +239,8 @@ df_pn[!, "trait"] = TraitExtraction.uparse_missing.(df_pn[!, col]);
 df_pn[!, "trait"] ./= oneunit(nonmissingtype(eltype(df_full[!, col])));
 sum(skipmissing(df_pn[!, "trait"]) .< 200)
 for i in eachindex(df_pn[!, "trait"])
-    if !ismissing(df_pn.trait[i]) && (df_pn.trait[i] < 0.1 || df_pn.trait[i] > 200)
+    if !ismissing(df_pn.trait[i]) &&
+       (df_pn.trait[i] < 0.1 || df_pn.trait[i] > 200)
         df_pn.trait[i] = missing
     end
     if !ismissing(df_pn.trait[i])
@@ -239,12 +253,14 @@ genera = collect(keys(cnt))[sortperm(collect(values(cnt)))][6650:end];
 species = df_wfo.binomial[(df_wfo.genus .∈ Ref(Set(genera))) .& (df_wfo.rank .== "species")]
 expand_tree!(real_tree, df_wfo, ranks = ["genus"], species = Set(species))
 
-delete!(df_pn, findall(ismissing.(df_pn[!, "trait"]) .& (df_pn.species .∉ Ref(Set(species)))))
+delete!(df_pn,
+        findall(ismissing.(df_pn[!, "trait"]) .&
+                (df_pn.species .∉ Ref(Set(species)))))
 keeptips!(real_tree, df_pn.species)
 select!(df_pn, Not(["species", col]))
 
 open("examples/tree.tree", "w") do io
-    write(io, real_tree)
+    return write(io, real_tree)
 end
 
 # sed 's/"//g' tree.tree > minus.tree
@@ -252,14 +268,17 @@ end
 
 pntree = readTopology("examples/final.tree");
 
-fitBM = phylolm(@formula(trait ~ 1), df_pn, pntree);
+fitBM = phylolm(@formula(trait~1), df_pn, pntree);
 ancStates = ancestralStateReconstruction(fitBM); # Should produce a warning, as variance is unknown.
 
 mnames = Set(df_pn.tipNames[ismissing.(df_pn.trait)]);
 ex = expectations(ancStates);
-ex.condExpectation = exp.(ex.condExpectation) .* oneunit(nonmissingtype(eltype(df_full[!, col])))
-ex.lower = exp.(predint(ancStates)[:,1]) .* oneunit(nonmissingtype(eltype(df_full[!, col])))
-ex.upper = exp.(predint(ancStates)[:,2]) .* oneunit(nonmissingtype(eltype(df_full[!, col])))
+ex.condExpectation = exp.(ex.condExpectation) .*
+                     oneunit(nonmissingtype(eltype(df_full[!, col])))
+ex.lower = exp.(predint(ancStates)[:, 1]) .*
+           oneunit(nonmissingtype(eltype(df_full[!, col])))
+ex.upper = exp.(predint(ancStates)[:, 2]) .*
+           oneunit(nonmissingtype(eltype(df_full[!, col])))
 
 ex[ex.nodeNumber .∈ Ref(Set(findall(pntree.names .∈ Ref(mnames)))), :]
 
@@ -321,7 +340,8 @@ if !isempty(dropped_species)
     println("Dropped $length(dropped_species) tips from tree")
     droptips!(reduced_tree, dropped_species)
 end
-vals = TraitExtraction.uparse_missing.(df_data[:, "plant min. height [m]"]) ./ oneunit(eltype(df_full[!, "plant min. height [m]"]))
+vals = TraitExtraction.uparse_missing.(df_data[:, "plant min. height [m]"]) ./
+       oneunit(eltype(df_full[!, "plant min. height [m]"]))
 @rput vals
 @rput reduced_tree
 
@@ -359,7 +379,7 @@ select!(species_wfo, Not("rank"))
 
 # Find duplicated binomials
 spp = species_wfo.binomial
-duplicates = spp[1:end-1] .== spp[2:end]
+duplicates = spp[1:(end - 1)] .== spp[2:end]
 push!(duplicates, false)
 delete!(species_wfo, duplicates)
 select!(species_wfo, Not("name", "species"))
@@ -371,35 +391,48 @@ for sp in keys(species_genus)
 end
 
 data = XLSX.readxlsx("data/Full PUP II sample.xlsx");
-bryo = synonymise(data["Bryophyte species"], synonym_to_species, species_to_family);
+bryo = synonymise(data["Bryophyte species"], synonym_to_species,
+                  species_to_family);
 bryo_syn = resynonym(bryo.vv[2], species_to_synonyms);
-pter = synonymise(data["Pteridophyte species"], synonym_to_species, species_to_family);
+pter = synonymise(data["Pteridophyte species"], synonym_to_species,
+                  species_to_family);
 pter_syn = resynonym(pter.vv[2], species_to_synonyms);
-monocot = synonymise(data["Monocot species"], synonym_to_species, species_to_family);
+monocot = synonymise(data["Monocot species"], synonym_to_species,
+                     species_to_family);
 monocot_syn = resynonym(monocot.vv[2], species_to_synonyms);
 dicot = synonymise(data["Dicot species"], synonym_to_species, species_to_family);
 dicot_syn = resynonym(dicot.vv[2], species_to_synonyms);
 
 XLSX.writetable("data/New PUP II.xlsx",
                 [("Bryophyte species", bryo.vv, bryo.cols),
-                 ("Bryophyte synonyms", bryo_syn.vv, bryo_syn.cols),
-                 ("Pteridophyte species", pter.vv, pter.cols),
-                 ("Pteridophyte synonyms", pter_syn.vv, pter_syn.cols),
-                 ("Monocot species", monocot.vv, monocot.cols),
-                 ("Monocot synonyms", monocot_syn.vv,monocot_syn.cols),
-                 ("Dicot species", dicot.vv, dicot.cols),
-                 ("Dicot synonyms", dicot_syn.vv, dicot_syn.cols)],
-                 overwrite = true)
+                    ("Bryophyte synonyms", bryo_syn.vv, bryo_syn.cols),
+                    ("Pteridophyte species", pter.vv, pter.cols),
+                    ("Pteridophyte synonyms", pter_syn.vv, pter_syn.cols),
+                    ("Monocot species", monocot.vv, monocot.cols),
+                    ("Monocot synonyms", monocot_syn.vv, monocot_syn.cols),
+                    ("Dicot species", dicot.vv, dicot.cols),
+                    ("Dicot synonyms", dicot_syn.vv, dicot_syn.cols)],
+                overwrite = true)
 
 # Drop any elements from trait_data whose entries have no "," in them
-trait_single = Dict(k => v for (k, v) in trait_data if eltype(v) <: Number || !any(occursin(",", x) for x in v))
-trait_dict = Dict(k => v for (k, v) in trait_data if eltype(v) <: AbstractString && any(occursin(",", x) for x in v))
-trait_colour = Dict(k => v for (k, v) in trait_dict if eltype(v) <: AbstractString && any(occursin("yellow", x) for x in v))
-trait_dict = Dict(k => v for (k, v) in trait_dict if eltype(v) <: AbstractString && !any(occursin("yellow", x) for x in v))
-
+trait_single = Dict(k => v
+                    for (k, v) in trait_data
+                    if eltype(v) <: Number || !any(occursin(",", x) for x in v))
+trait_dict = Dict(k => v
+                  for (k, v) in trait_data
+                  if eltype(v) <: AbstractString &&
+                     any(occursin(",", x) for x in v))
+trait_colour = Dict(k => v
+                    for (k, v) in trait_dict
+                    if eltype(v) <: AbstractString &&
+                       any(occursin("yellow", x) for x in v))
+trait_dict = Dict(k => v
+                  for (k, v) in trait_dict
+                  if eltype(v) <: AbstractString &&
+                     !any(occursin("yellow", x) for x in v))
 
 ks_multi = [keys(trait_dict)...]
-col_multi = Vector{Vector{Union{Missing,String}}}()
+col_multi = Vector{Vector{Union{Missing, String}}}()
 
 for k in ks_multi
     v = trait_dict[k]
@@ -412,7 +445,7 @@ ks_multi = ks_multi[sortperm(length.(values(trait_dict)))]
 col_multi = col_multi[sortperm(length.(values(trait_dict)))]
 
 ks_colour = [keys(trait_colour)...]
-col_colour = Vector{Vector{Union{Missing,String}}}()
+col_colour = Vector{Vector{Union{Missing, String}}}()
 
 for k in ks_colour
     v = trait_colour[k]
@@ -425,7 +458,7 @@ ks_colour = ks_colour[sortperm(length.(values(trait_colour)))]
 col_colour = col_colour[sortperm(length.(values(trait_colour)))]
 
 ks_single = [keys(trait_single)...]
-col_single = Vector{Vector{Union{Missing,String, Int}}}()
+col_single = Vector{Vector{Union{Missing, String, Int}}}()
 
 for k in ks_single
     v = trait_single[k]
@@ -440,17 +473,21 @@ col_single = col_single[sortperm(length.(values(trait_single)))]
 # Write the data to an excel file
 XLSX.writetable("examples/traits.xlsx",
                 [("Multi", col_multi, ks_multi),
-                 ("Colour", col_colour, ks_colour),
-                 ("Single", col_single, ks_single)],
-                 overwrite = true)
+                    ("Colour", col_colour, ks_colour),
+                    ("Single", col_single, ks_single)],
+                overwrite = true)
 
 climate = CSV.read("data/climate.csv", DataFrame)
 for col in names(climate)[2:end]
-    climate[!, col] = passmissing(x -> round(x, sigdigits = 4)).(climate[!, col])
+    climate[!, col] = passmissing(x -> round(x, sigdigits = 4)).(climate[!,
+                                                                         col])
 end
 
 # Add WFO refs into climate data and round to 4dp
-climate.wfo = [haskey(binomial_id, row.species) ? df_wfo.wfo[binomial_id[row.species]] : missing for row in eachrow(climate)]
+climate.wfo = [haskey(binomial_id, row.species) ?
+               df_wfo.wfo[binomial_id[row.species]] : missing
+               for row in eachrow(climate)]
 delete!(climate, findall(ismissing.(climate.wfo)))
 CSV.write("examples/climate.csv", climate)
-length(climate.species), length(df_full.species), length(climate.species ∩ df_full.species)
+length(climate.species), length(df_full.species),
+length(climate.species ∩ df_full.species)
