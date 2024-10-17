@@ -15,12 +15,13 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
+CSV = "0.10"
 julia = "1.6.7"
 
 [[author_details]]
 name = "Richard Reeve"
-orcid = "0000-0003-2589-8091"
 email = "richard.reeve@glasgow.ac.uk"
+orcid = "0000-0003-2589-8091"
 
     [[author_details.affiliation]]
     ror = "00vtgdb53"
