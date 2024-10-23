@@ -2,6 +2,9 @@
 
 module TraitExtraction
 
+# Path into package
+path(path...; dir::String = "test") = joinpath(@__DIR__, "..", dir, path...)
+
 using XLSX, CSV
 using DataFrames, Unitful, Statistics, Phylo
 

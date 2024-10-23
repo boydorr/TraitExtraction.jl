@@ -6,15 +6,21 @@
     "developmentStatus": "active",
     "codeRepository": "https://github.com/boydorr/TraitExtraction.jl",
     "name": "TraitExtraction.jl",
+    "codemeta:contIntegration": {
+        "id": "https://github.com/boydorr/TraitExtraction.jl/actions/workflows/CI.yaml"
+    },
+    "continuousIntegration": "https://github.com/boydorr/TraitExtraction.jl/actions/workflows/CI.yaml",
     "issueTracker": "https://github.com/boydorr/TraitExtraction.jl/issues",
     "readme": "https://github.com/boydorr/TraitExtraction.jl/blob/main/README.md",
     "dateCreated": "2024-09-29",
     "operatingSystem": [
-        "Linux"
+        "Linux",
+        "Windows",
+        "macOS"
     ],
     "version": "v0.1.0",
-    "dateModified": "2024-10-16",
-    "datePublished": "2024-10-16",
+    "dateModified": "2024-10-23",
+    "datePublished": "2024-10-23",
     "downloadUrl": "https://github.com/boydorr/TraitExtraction.jl/archive/refs/tags/v0.1.0.tar.gz",
     "license": "https://spdx.org/licenses/BSD-2-Clause",
     "author": [

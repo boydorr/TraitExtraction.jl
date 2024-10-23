@@ -17,10 +17,16 @@ XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 [compat]
 CSV = "0.10"
 DataFrames = "1"
+Git = "1"
+JuliaFormatter = "1"
+Logging = "1.6"
 Missings = "1"
 Phylo = "0.5"
 PhyloNetworks = "0.16"
-Statistics = "1"
+Pkg = "1.6"
+ResearchSoftwareMetadata = "0.1.1"
+Statistics = "1.6"
+Test = "1.6"
 Unitful = "1"
 XLSX = "0.10"
 julia = "1.6.7"
@@ -34,7 +40,12 @@ email = "richard.reeve@glasgow.ac.uk"
     ror = "00vtgdb53"
 
 [extras]
+Git = "d7ba0133-e1db-5d97-8f8c-041e4b3a1eb2"
+JuliaFormatter = "98e50ef6-434e-11e9-1051-2b60c6c9e899"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+ResearchSoftwareMetadata = "58378933-4625-47fa-851e-05ee27d397bd"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Git", "JuliaFormatter", "Logging", "Pkg", "ResearchSoftwareMetadata", "Test"]

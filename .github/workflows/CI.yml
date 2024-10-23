@@ -22,20 +22,46 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version:
-          - '1.10'
+        julia-version:
           - '1.6'
-          - 'pre'
+          - '1'
         os:
           - ubuntu-latest
+          - macOS-latest
+          - windows-latest
         arch:
           - x64
+          - arm64
+        exclude:
+          - os: macOS-latest
+            julia-version: '1.6'
+            arch: arm64
+          - os: macOS-latest
+            julia-version: '1'
+            arch: x64
+          - os: ubuntu-latest
+            arch: arm64
+          - os: windows-latest
+            arch: arm64
+      fail-fast: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: julia-actions/cache@v2
-      - uses: julia-actions/julia-buildpkg@v1
-      - uses: julia-actions/julia-runtest@v1
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up julia
+      uses: julia-actions/setup-julia@v2
+      with:
+        version: ${{ matrix.julia-version }}
+        arch: ${{ matrix.arch }}
+    - name: Cache
+      uses: julia-actions/cache@v2
+    - name: Build package
+      uses: julia-actions/julia-buildpkg@v1
+    - name: Running
+      uses: julia-actions/julia-runtest@v1
+    - name: Process coverage
+      uses: julia-actions/julia-processcoverage@v1
+    - name: Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
