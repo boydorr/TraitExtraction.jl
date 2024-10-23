@@ -15,6 +15,14 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
+CSV = "0.10"
+DataFrames = "1"
+Missings = "1"
+Phylo = "0.5"
+PhyloNetworks = "0.16"
+Statistics = "1"
+Unitful = "1"
+XLSX = "0.10"
 julia = "1.6.7"
 
 [[author_details]]
